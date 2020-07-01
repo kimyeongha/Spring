@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.zerock.mapper.BoardMapper">  <!-- 뭐 참조할꺼니 inferface와 같은 이름해야함 -->
+	<select id="getList" resultType="org.zerock.domain.BoardVO">   <!-- 어디서 저장해서 return 하거냐 interface의 메소드이름이랑 id랑 가탕야함 -->
+		<!-- cdata는 위에 태그 <랑 sql의 부등호와 묶이지 않도록 쓰는 것 -->
+      <![CDATA[         
+        select * from tb1_board where bno>0
+      
+      ]]>
+	</select>
+	<select id="getListWithPaging" resultType="org.zerock.domain.BoardVO">
+    <![CDATA[   
+		select*
+		from(
+		select @rownum:=@rownum+1 as rownum,b.*
+		from(select @rownum:=0) as tmp,tb1_board b
+			where 1=1
+			     ]]>
+			<trim prefix="and(" suffix=")" prefixOverrides="or">  
+				<foreach item="type" collection="typeArr">
+					<trim prefix="or">    <!-- 뒤에 다 or을 붙여주는데 문법 맞지 않을경우 or 떄준다 -->
+						<choose>
+							<when test="type=='T'.toString()">
+								title like concat('%',#{keyword},'%')
+							</when>
+							<when test="type=='C'.toString()">
+								content like concat('%',#{keyword},'%')
+							</when>
+							<when test="type=='W'.toString()">
+								writer like concat('%',#{keyword},'%')
+							</when>
+						</choose>
+					</trim>
+				</foreach>
+			</trim>
+			order by bno desc
+			)boardlist
+			 <![CDATA[   
+			where rownum >=(#{pageNum}-1)*#{amount} and rownum <= #{pageNum}*#{amount}
+                ]]>
+	</select>
+
+	<!--insert만 처리되고 생성된pk값 알 필요가 없는경우 -->
+	<insert id="insertR">
+		insert into tb1_board
+		(title,content,writer)values(#{title},#{content},#{writer})  <!-- insertR에서 
+			매개변수로boardVo를 보내주는데 거기의 데이터와 이름이 같아야한다. -->
+	</insert>
+
+
+	<!-- insert문 실행되고 생성된pk값 알아야하는경우 -->
+	<insert id="insertKey">
+		<selectKey keyProperty="content" order="BEFORE"
+			resultType="String">
+			select concat( date_format(sysdate(),'%Y%m%d'),'0000001')            <!-- 뒤insert하기전 
+				select한다 -->
+		</selectKey>
+		insert into tb1_board
+		(title,content,writer)values(#{title},#{content},#{writer})
+	</insert>
+
+
+	<select id="read" resultType="org.zerock.domain.BoardVO">
+		select * from tb1_board where
+		bno=#{bno}
+	</select>
+
+
+	<delete id="delete">
+		delete from tb1_board where bno=#{bno}
+	</delete>
+
+
+	<update id="update">
+		update tb1_board
+		set title=#{title} ,
+		content
+		=#{content},
+		updatedate=sysdate()
+		where bno=#{bno};
+
+	</update>
+    <sql id='criteria'>   <!--  공통부분 은 이렇게 저장해서 include 가능 -->
+      <trim prefix="and(" suffix=")" prefixOverrides="or">  
+				<foreach item="type" collection="typeArr">
+					<trim prefix="or">    <!-- 뒤에 다 or을 붙여주는데 문법 맞지 않을경우 or 떄준다 -->
+						<choose>
+							<when test="type=='T'.toString()">
+								title like concat('%',#{keyword},'%')
+							</when>
+							<when test="type=='C'.toString()">
+								content like concat('%',#{keyword},'%')
+							</when>
+							<when test="type=='W'.toString()">
+								writer like concat('%',#{keyword},'%')
+							</when>
+						</choose>
+					</trim>
+				</foreach>
+			</trim>
+    
+    
+    
+    </sql>
+
+
+
+
+	<select id="getTotalCount" resultType='int'>
+		Select count(*) from
+		tb1_board 
+	       where  bno>0
+		  <include refid="criteria"></include>  <!--이거 한 이유 검색 조건으로만 다시 카운터 해야하니까 그래서 다시 페이징함]-->
+			
+		
+		
+		
+	</select>
+
+
+</mapper>
+  

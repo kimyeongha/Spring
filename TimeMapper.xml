@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+  
+  <mapper namespace="org.zerock.mapper.TimeMapper" >
+         <select id="getTime2" resultType="string">   <!-- id에는 주소안에 있는 메소드이름과 결과의 값 타입 -->
+                        select sysdate(); 
+         </select>
+  </mapper>
